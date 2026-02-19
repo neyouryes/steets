@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>KCIGS UI/UX Board</title>
+  <style>
+    :root{
+      --text: rgba(255,255,255,0.92);
+      --textSoft: rgba(255,255,255,0.75);
+      --line: rgba(255,255,255,0.78);
+      --lineSoft: rgba(255,255,255,0.55);
+      --bg: #0b0f0d;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{
+      height:100%;
+      margin:0;
+      background: var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display","SF Pro Text",
+                   "Apple SD Gothic Neo","Noto Sans KR",system-ui, sans-serif;
+      overflow:hidden;
+      user-select:none;
+      -webkit-user-select:none;
+      -webkit-touch-callout:none;
+    }
+
+    /* Stage: full-screen */
+    .stage{
+      position:relative;
+      width:100%;
+      height:100%;
+      isolation:isolate;
+      background: var(--bg);
+    }
+
+    /* Page wrapper */
+    .page{
+      position:absolute;
+      inset:0;
+      opacity:0;
+      pointer-events:none;
+      transition: opacity 420ms ease;
+    }
+    .page.is-active{
+      opacity:1;
+      pointer-events:auto;
+    }
+
+    /* Soft blobs background */
+    .blobs{
+      position:absolute;
+      inset:-12%;
+      filter: blur(36px);
+      transform: translateZ(0);
+      opacity: 0.98;
+      z-index:0;
+    }
+    .blob{
+      position:absolute;
+      width: 48vmin;
+      height: 48vmin;
+      border-radius: 999px;
+      mix-blend-mode: screen;
+      opacity: 0.85;
+      transform: translate3d(0,0,0);
+      will-change: transform;
+    }
+
+    /* Grain overlay */
+    .grain{
+      position:absolute;
+      inset:-20%;
+      background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+      background-size: 220px 220px;
+      opacity: 0.16; /* 조절 포인트 */
+      mix-blend-mode: overlay;
+      pointer-events:none;
+      z-index:2;
+      animation: grainShift 10s steps(10) infinite;
+    }
+    @keyframes grainShift{
+      0%{ transform: translate3d(0,0,0); }
+      10%{ transform: translate3d(-2%, -3%, 0); }
+      20%{ transform: translate3d(-4%, 2%, 0); }
+      30%{ transform: translate3d(3%, -4%, 0); }
+      40%{ transform: translate3d(5%, 1%, 0); }
+      50%{ transform: translate3d(-3%, 4%, 0); }
+      60%{ transform: translate3d(-5%, 0%, 0); }
+      70%{ transform: translate3d(2%, 5%, 0); }
+      80%{ transform: translate3d(4%, -1%, 0); }
+      90%{ transform: translate3d(1%, -5%, 0); }
+      100%{ transform: translate3d(0,0,0); }
+    }
+
+    /* Content layer */
+    .content{
+      position:absolute;
+      inset:0;
+      z-index:3;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right)
+               env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+
+    /* Minimal typography */
+    .centerBlock{
+      width:min(88vw, 840px);
+      text-align:center;
+      letter-spacing: .06em;
+    }
+    .kicker{
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--textSoft);
+      margin-bottom: 10px;
+    }
+    .title{
+      font-size: clamp(22px, 3.2vw, 34px);
+      font-weight: 600;
+      color: var(--text);
+      margin: 0 0 14px;
+    }
+    .sub{
+      font-size: clamp(14px, 2.1vw, 18px);
+      font-weight: 450;
+      color: var(--textSoft);
+      margin: 0;
+      line-height: 1.45;
+    }
+
+    /* Cup placement ring */
+    .cupRing{
+      position:absolute;
+      width: min(34vmin, 260px);
+      height: min(34vmin, 260px);
+      border-radius: 999px;
+      border: 2px dashed var(--line);
+      opacity: 0.92;
+      left: 50%;
+      top: 62%;
+      transform: translate(-50%,-50%);
+      z-index:3;
+      pointer-events:none;
+    }
+    .cupRing::after{
+      content:"";
+      position:absolute;
+      inset: 14%;
+      border-radius:999px;
+      border: 1px dashed var(--lineSoft);
+      opacity: 0.9;
+    }
+
+    /* Small navigation (optional) */
+    .nav{
+      position:absolute;
+      left: 50%;
+      bottom: calc(14px + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      display:flex;
+      gap:10px;
+      z-index:4;
+      align-items:center;
+      justify-content:center;
+      opacity: 0.9;
+    }
+    .dot{
+      width: 8px; height:8px;
+      border-radius:99px;
+      border:1px solid rgba(255,255,255,.55);
+      background: transparent;
+    }
+    .dot.is-active{
+      background: rgba(255,255,255,.75);
+      border-color: rgba(255,255,255,.75);
+    }
+
+    .hint{
+      position:absolute;
+      top: calc(14px + env(safe-area-inset-top));
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      color: rgba(255,255,255,0.55);
+      z-index:4;
+      letter-spacing:.04em;
+    }
+
+    /* UI/UX intro page styles */
+    .introCard{
+      width:min(86vw, 860px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 24px 20px;
+      backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.04);
+      text-align:left;
+    }
+    .introGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .pill{
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 16px;
+      padding: 14px 14px;
+    }
+    .pill h3{
+      margin:0 0 8px;
+      color: rgba(255,255,255,0.9);
+      font-size: 14px;
+      letter-spacing:.06em;
+      font-weight:600;
+    }
+    .pill p{
+      margin:0;
+      color: rgba(255,255,255,0.72);
+      font-size: 13px;
+      line-height:1.45;
+    }
+    .introTitle{
+      margin:0;
+      color: rgba(255,255,255,0.92);
+      font-weight:650;
+      letter-spacing:.06em;
+      font-size: 18px;
+    }
+    .introSub{
+      margin:8px 0 0;
+      color: rgba(255,255,255,0.68);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 720px){
+      .introGrid{ grid-template-columns: 1fr; }
+      .cupRing{ top: 64%; }
+    }
+
+    /* Respect reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      .grain{ animation:none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage" id="stage">
+    <div class="hint">Swipe / ← →</div>
+
+    <!-- PAGE 1: UI/UX -->
+    <section class="page is-active" data-page="0" aria-label="UIUX Intro">
+      <div class="blobs" id="introBlobs">
+        <div class="blob" style="background:#f5f2ec; left:10%; top:10%; width:62vmin; height:62vmin; opacity:.55;"></div>
+        <div class="blob" style="background:#d77a8a; left:55%; top:20%; width:56vmin; height:56vmin; opacity:.42;"></div>
+        <div class="blob" style="background:#1e3a2f; left:20%; top:60%; width:58vmin; height:58vmin; opacity:.35;"></div>
+      </div>
+      <div class="grain"></div>
+      <div class="content">
+        <div class="introCard">
+          <p class="introTitle">UI / UX</p>
+          <p class="introSub">
+            보이는 인상(UI)과, 직접 경험하는 만족(UX)이 자연스럽게 이어질 때
+            재방문과 재구매로 연결됩니다.
+          </p>
+          <div class="introGrid">
+            <div class="pill">
+              <h3>UI</h3>
+              <p>의상 · 태도 · 말투 · 플레이트 · 잔 · 색감 등<br/>눈으로 보이는 전체 인상</p>
+            </div>
+            <div class="pill">
+              <h3>UX</h3>
+              <p>마시는 방식 · 향/질감/맛의 흐름 · 편안함 등<br/>경험의 마찰을 줄이는 만족</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE 2: ICE -->
+    <section class="page" data-page="1" aria-label="ICE Board">
+      <div class="blobs" id="iceBlobs">
+        <div class="blob" data-blob="a" style="background:#1E3A2F; left:10%; top:55%;"></div>
+        <div class="blob" data-blob="b" style="background:#F2A900; left:18%; top:8%; width:44vmin; height:44vmin; opacity:.72;"></div>
+        <div class="blob" data-blob="c" style="background:#E85C0D; left:52%; top:26%; width:52vmin; height:52vmin; opacity:.78;"></div>
+      </div>
+      <div class="grain"></div>
+      <div class="cupRing" aria-hidden="true"></div>
+      <div class="content">
+        <div class="centerBlock">
+          <div class="kicker">COLOMBIA · LAS MARGARITAS · CGLE-17 HONEY</div>
+          <h1 class="title">ICE — Neon Tropical Night</h1>
+          <p class="sub">Jameson base · Mango density · Citrus clarity</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE 3: HOT -->
+    <section class="page" data-page="2" aria-label="HOT Board">
+      <div class="blobs" id="hotBlobs" style="filter: blur(40px); opacity:.95;">
+        <div class="blob" data-blob="a" style="background:#F5F2EC; left:10%; top:8%; width:70vmin; height:70vmin; opacity:.68;"></div>
+        <div class="blob" data-blob="b" style="background:#D77A8A; left:52%; top:20%; width:56vmin; height:56vmin; opacity:.45;"></div>
+        <div class="blob" data-blob="c" style="background:#B33A3A; left:34%; top:62%; width:44vmin; height:44vmin; opacity:.38;"></div>
+      </div>
+      <div class="grain" style="opacity:.12"></div>
+      <div class="cupRing" aria-hidden="true"></div>
+      <div class="content">
+        <div class="centerBlock">
+          <div class="kicker">COLOMBIA · LAS MARGARITAS · CGLE-17 HONEY</div>
+          <h1 class="title">HOT — Plum Blossom Ink</h1>
+          <p class="sub">Jameson base · Silky comfort · Deep aftertaste</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="nav" aria-hidden="true">
+      <div class="dot is-active" data-dot="0"></div>
+      <div class="dot" data-dot="1"></div>
+      <div class="dot" data-dot="2"></div>
+    </div>
+  </div>
+
+  <script>
+    // --- page navigation ---
+    const pages = Array.from(document.querySelectorAll(".page"));
+    const dots = Array.from(document.querySelectorAll(".dot"));
+    let idx = 0;
+
+    function setPage(next){
+      idx = (next + pages.length) % pages.length;
+      pages.forEach((p,i)=>p.classList.toggle("is-active", i===idx));
+      dots.forEach((d,i)=>d.classList.toggle("is-active", i===idx));
+    }
+
+    window.addEventListener("keydown", (e)=>{
+      if(e.key === "ArrowRight") setPage(idx+1);
+      if(e.key === "ArrowLeft") setPage(idx-1);
+    });
+
+    let touchX = null;
+    window.addEventListener("touchstart", (e)=>{ touchX = e.touches[0].clientX; }, {passive:true});
+    window.addEventListener("touchend", (e)=>{
+      if(touchX == null) return;
+      const dx = e.changedTouches[0].clientX - touchX;
+      if(Math.abs(dx) > 40){
+        if(dx < 0) setPage(idx+1);
+        else setPage(idx-1);
+      }
+      touchX = null;
+    }, {passive:true});
+
+    // --- blob animation: slow drift + subtle parallax ---
+    function animateBlobs(containerId, speed=0.018){
+      const el = document.getElementById(containerId);
+      if(!el) return;
+      const blobs = Array.from(el.querySelectorAll(".blob"));
+
+      const seeds = blobs.map((b,i)=>({
+        x: (i*97)%100,
+        y: (i*53)%100,
+        a: 20 + (i*7)%18,   // amplitude
+        b: 18 + (i*9)%16,
+        s: speed * (1 + i*0.12),
+        r: (i%2===0? 1 : -1)
+      }));
+
+      let t = 0;
+      function frame(){
+        t += 1;
+        blobs.forEach((blob,i)=>{
+          const k = seeds[i];
+          const dx = Math.sin((t*k.s) + i) * k.a;
+          const dy = Math.cos((t*k.s) + i*1.7) * k.b;
+          const rot = Math.sin((t*k.s)*0.7) * 2 * k.r;
+
+          blob.style.transform = `translate3d(${dx}px, ${dy}px, 0) rotate(${rot}deg)`;
+        });
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    }
+
+    // Intro very subtle
+    animateBlobs("introBlobs", 0.010);
+    // ICE: a bit more energetic (still slow)
+    animateBlobs("iceBlobs", 0.020);
+    // HOT: slower & calmer
+    animateBlobs("hotBlobs", 0.014);
+
+    // Optional: tap dots to navigate
+    dots.forEach((d)=>{
+      d.addEventListener("click", ()=> setPage(Number(d.dataset.dot)));
+    });
+  </script>
+</body>
+</html>
