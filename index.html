@@ -3,7 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0f0d" />
   <title>KCIGS UI/UX Board</title>
+
   <style>
     :root{
       --text: rgba(255,255,255,0.92);
@@ -11,6 +13,9 @@
       --line: rgba(255,255,255,0.78);
       --lineSoft: rgba(255,255,255,0.55);
       --bg: #0b0f0d;
+
+      /* iPad Safari URL 모드에서 꽉 차게 */
+      --vh: 1vh;
     }
 
     *{ box-sizing:border-box; }
@@ -24,15 +29,19 @@
       user-select:none;
       -webkit-user-select:none;
       -webkit-touch-callout:none;
+      overscroll-behavior: none;
+      -webkit-text-size-adjust: 100%;
     }
 
-    /* Stage: full-screen */
+    /* Stage: full-screen (iPad Safari 안정화) */
     .stage{
-      position:relative;
-      width:100%;
-      height:100%;
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: calc(var(--vh) * 100);
       isolation:isolate;
       background: var(--bg);
+      overflow:hidden;
     }
 
     /* Page wrapper */
@@ -75,7 +84,7 @@
       background-image:
         url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
       background-size: 220px 220px;
-      opacity: 0.16; /* 조절 포인트 */
+      opacity: 0.16;
       mix-blend-mode: overlay;
       pointer-events:none;
       z-index:2;
@@ -248,8 +257,179 @@
     @media (prefers-reduced-motion: reduce){
       .grain{ animation:none; }
     }
+
+    /* =========================================================
+       HOT — Hanji + Ink Wash + Hanok Doors + Plum Blossom (image)
+       ========================================================= */
+
+    /* HOT canvas */
+    .hotStage{
+      position:absolute;
+      inset:0;
+      background:#f3efe6;
+      overflow:hidden;
+      isolation:isolate;
+      z-index:0;
+    }
+
+    /* 한지 텍스처 */
+    .hotHanji{
+      position:absolute;
+      inset:-20%;
+      background: linear-gradient(0deg, rgba(255,255,255,.35), rgba(255,255,255,.00));
+      z-index:0;
+    }
+    .hotHanji::after{
+      content:"";
+      position:absolute; inset:0;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='420'%3E%3Cfilter id='t'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='420' height='420' filter='url(%23t)' opacity='.22'/%3E%3C/svg%3E");
+      background-size:420px 420px;
+      mix-blend-mode:multiply;
+      opacity:.55;
+    }
+
+    /* 먹/수채 번짐 */
+    .hotInk{
+      position:absolute;
+      inset:-18%;
+      filter: blur(28px);
+      z-index:1;
+      opacity:.95;
+    }
+    .hotInk::before{
+      content:"";
+      position:absolute; inset:0;
+      background:
+        radial-gradient(closest-side at 28% 30%, rgba(215,122,138,.26), transparent 62%),
+        radial-gradient(closest-side at 62% 42%, rgba(164, 52, 58, .34), transparent 64%),
+        radial-gradient(closest-side at 44% 70%, rgba(120, 86, 60, .20), transparent 62%),
+        radial-gradient(closest-side at 78% 22%, rgba(255,255,255,.22), transparent 60%),
+        radial-gradient(closest-side at 18% 78%, rgba(255,255,255,.16), transparent 58%);
+      mix-blend-mode:multiply;
+      animation: hotInkDrift 20s ease-in-out infinite;
+    }
+    @keyframes hotInkDrift{
+      0%   { transform: translate3d(-1.2%, 0.9%, 0) scale(1.02); }
+      25%  { transform: translate3d(1.8%, -1.3%, 0) scale(1.06); }
+      50%  { transform: translate3d(0.8%, 1.8%, 0) scale(1.10); }
+      75%  { transform: translate3d(-1.8%, -0.9%, 0) scale(1.06); }
+      100% { transform: translate3d(-1.2%, 0.9%, 0) scale(1.02); }
+    }
+
+    /* 매화 이미지 (네 파일) */
+    .hotPlum{
+      position:absolute;
+      inset:0;
+      z-index:2;
+      pointer-events:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      opacity:.92;
+      transform-origin: 55% 45%;
+      animation: hotPlumSway 8.5s ease-in-out infinite;
+      filter: drop-shadow(0 10px 22px rgba(0,0,0,.10));
+    }
+    .hotPlum img{
+      width: min(92vw, 920px);
+      max-height: 88vh;
+      object-fit: contain;
+      /* 먹화 느낌: */
+      mix-blend-mode: multiply;
+      opacity: .98;
+    }
+    @keyframes hotPlumSway{
+      0%   { transform: rotate(-0.35deg) translate3d(0,0,0); }
+      50%  { transform: rotate(0.55deg) translate3d(-0.4%, 0.35%, 0); }
+      100% { transform: rotate(-0.35deg) translate3d(0,0,0); }
+    }
+
+    /* 한옥문: 더 한옥 느낌 (프레임/창살/상단 문양) */
+    .hotDoors{
+      position:absolute;
+      inset:0;
+      z-index:5;
+      pointer-events:none;
+    }
+    .hotDoor{
+      position:absolute;
+      top:0; bottom:0;
+      width:46%;
+      /* 목재 톤 */
+      background:
+        linear-gradient(90deg, rgba(0,0,0,.10), rgba(255,255,255,.02)),
+        linear-gradient(180deg, rgba(144,112,78,.70), rgba(98,72,48,.80));
+      box-shadow:
+        0 0 0 2px rgba(60,40,25,.25) inset,
+        0 0 0 12px rgba(0,0,0,.05) inset;
+      filter:saturate(.95);
+      overflow:hidden;
+    }
+    .hotDoor.left{ left:0; transform: translateX(0%); }
+    .hotDoor.right{ right:0; transform: translateX(0%); }
+
+    /* 문 상단 장식(가벼운 문양 느낌) */
+    .hotDoor::after{
+      content:"";
+      position:absolute;
+      left:0; right:0;
+      top:0;
+      height: 92px;
+      background:
+        radial-gradient(circle at 18% 55%, rgba(255,255,255,.14) 0 18px, transparent 19px),
+        radial-gradient(circle at 50% 55%, rgba(255,255,255,.10) 0 16px, transparent 17px),
+        radial-gradient(circle at 82% 55%, rgba(255,255,255,.14) 0 18px, transparent 19px),
+        linear-gradient(180deg, rgba(0,0,0,.10), rgba(255,255,255,0));
+      mix-blend-mode: overlay;
+      opacity:.55;
+    }
+
+    /* 창살(격자) */
+    .hotDoor::before{
+      content:"";
+      position:absolute;
+      inset: 110px 9% 9% 9%;
+      background:
+        repeating-linear-gradient(
+          90deg,
+          rgba(255,255,255,.18) 0 2px,
+          rgba(0,0,0,0) 2px 22px
+        ),
+        repeating-linear-gradient(
+          0deg,
+          rgba(255,255,255,.12) 0 2px,
+          rgba(0,0,0,0) 2px 22px
+        );
+      border-radius: 8px;
+      box-shadow: 0 0 0 1px rgba(255,255,255,.08) inset;
+      mix-blend-mode: overlay;
+      opacity:.62;
+    }
+
+    /* 문 열림 애니메이션 */
+    .page.is-active .hotStage.is-open .hotDoor.left{
+      animation: hotDoorLeftOpen 2.2s cubic-bezier(.2,.8,.2,1) forwards;
+    }
+    .page.is-active .hotStage.is-open .hotDoor.right{
+      animation: hotDoorRightOpen 2.2s cubic-bezier(.2,.8,.2,1) forwards;
+    }
+    @keyframes hotDoorLeftOpen{ to { transform: translateX(-92%); } }
+    @keyframes hotDoorRightOpen{ to { transform: translateX(92%); } }
+
+    /* HOT: 밝은 배경이므로 텍스트/링을 어두운 톤으로 (화이트 고집이면 이 블록 삭제) */
+    .hotText .kicker{ color: rgba(0,0,0,.56) !important; }
+    .hotText .title{ color: rgba(0,0,0,.74) !important; }
+    .hotText .sub{ color: rgba(0,0,0,.54) !important; }
+
+    .hotRing{
+      border-color: rgba(0,0,0,.34) !important;
+    }
+    .hotRing::after{
+      border-color: rgba(0,0,0,.22) !important;
+    }
   </style>
 </head>
+
 <body>
   <div class="stage" id="stage">
     <div class="hint">Swipe / ← →</div>
@@ -301,16 +481,29 @@
       </div>
     </section>
 
-    <!-- PAGE 3: HOT -->
+    <!-- PAGE 3: HOT (Hanok door + hanji + ink + your plum image) -->
     <section class="page" data-page="2" aria-label="HOT Board">
-      <div class="blobs" id="hotBlobs" style="filter: blur(40px); opacity:.95;">
-        <div class="blob" data-blob="a" style="background:#F5F2EC; left:10%; top:8%; width:70vmin; height:70vmin; opacity:.68;"></div>
-        <div class="blob" data-blob="b" style="background:#D77A8A; left:52%; top:20%; width:56vmin; height:56vmin; opacity:.45;"></div>
-        <div class="blob" data-blob="c" style="background:#B33A3A; left:34%; top:62%; width:44vmin; height:44vmin; opacity:.38;"></div>
+      <div class="hotStage" id="hotStage">
+        <div class="hotHanji"></div>
+        <div class="hotInk"></div>
+
+        <!-- ✅ 네 매화 이미지: 같은 폴더에 maehwa.png 로 두기 -->
+        <div class="hotPlum" aria-hidden="true">
+          <img src="maehwa.png" alt="Plum blossom (maehwa)" />
+        </div>
+
+        <div class="hotDoors" aria-hidden="true">
+          <div class="hotDoor left"></div>
+          <div class="hotDoor right"></div>
+        </div>
+
+        <!-- 핫 그레인은 아주 미세하게 -->
+        <div class="grain" style="opacity:.10"></div>
       </div>
-      <div class="grain" style="opacity:.12"></div>
-      <div class="cupRing" aria-hidden="true"></div>
-      <div class="content">
+
+      <div class="cupRing hotRing" aria-hidden="true"></div>
+
+      <div class="content hotText">
         <div class="centerBlock">
           <div class="kicker">COLOMBIA · LAS MARGARITAS · CGLE-17 HONEY</div>
           <h1 class="title">HOT — Plum Blossom Ink</h1>
@@ -327,6 +520,14 @@
   </div>
 
   <script>
+    // ✅ iPad Safari URL 모드에서 실제 화면 높이 보정
+    function setRealVH(){
+      document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+    }
+    setRealVH();
+    window.addEventListener('resize', setRealVH);
+    window.addEventListener('orientationchange', () => setTimeout(setRealVH, 250));
+
     // --- page navigation ---
     const pages = Array.from(document.querySelectorAll(".page"));
     const dots = Array.from(document.querySelectorAll(".dot"));
@@ -336,6 +537,18 @@
       idx = (next + pages.length) % pages.length;
       pages.forEach((p,i)=>p.classList.toggle("is-active", i===idx));
       dots.forEach((d,i)=>d.classList.toggle("is-active", i===idx));
+
+      // ✅ HOT 문 열림: HOT 페이지(인덱스 2) 진입 시마다 열리게
+      const hotStage = document.getElementById('hotStage');
+      if(hotStage){
+        if(idx === 2){
+          hotStage.classList.remove('is-open');
+          void hotStage.offsetWidth; // reflow로 애니메이션 리셋
+          setTimeout(()=> hotStage.classList.add('is-open'), 80);
+        }else{
+          hotStage.classList.remove('is-open');
+        }
+      }
     }
 
     window.addEventListener("keydown", (e)=>{
@@ -362,9 +575,7 @@
       const blobs = Array.from(el.querySelectorAll(".blob"));
 
       const seeds = blobs.map((b,i)=>({
-        x: (i*97)%100,
-        y: (i*53)%100,
-        a: 20 + (i*7)%18,   // amplitude
+        a: 20 + (i*7)%18,
         b: 18 + (i*9)%16,
         s: speed * (1 + i*0.12),
         r: (i%2===0? 1 : -1)
@@ -378,7 +589,6 @@
           const dx = Math.sin((t*k.s) + i) * k.a;
           const dy = Math.cos((t*k.s) + i*1.7) * k.b;
           const rot = Math.sin((t*k.s)*0.7) * 2 * k.r;
-
           blob.style.transform = `translate3d(${dx}px, ${dy}px, 0) rotate(${rot}deg)`;
         });
         requestAnimationFrame(frame);
@@ -386,12 +596,8 @@
       requestAnimationFrame(frame);
     }
 
-    // Intro very subtle
     animateBlobs("introBlobs", 0.010);
-    // ICE: a bit more energetic (still slow)
     animateBlobs("iceBlobs", 0.020);
-    // HOT: slower & calmer
-    animateBlobs("hotBlobs", 0.014);
 
     // Optional: tap dots to navigate
     dots.forEach((d)=>{
